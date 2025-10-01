@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortlink Manis 🎀 nurts.xyz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Definisi Skema Warna Pink */
+            --primary-pink: #FF69B4; /* Deep Pink */
+            --light-pink: #FFC0CB;   /* Light Pink */
+            --bg-color: #FFF0F5;     /* Lavender Blush */
+            --text-color: #333;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            max-width: 500px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        h1 { 
+            color: var(--primary-pink); 
+            text-align: center;
+            border-bottom: 3px solid var(--light-pink); 
+            padding-bottom: 15px; 
+            font-weight: 600;
+        }
+
+        form { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); 
+        }
+
+        label { 
+            display: block; 
+            margin-top: 18px; 
+            font-weight: 600; 
+            color: var(--primary-pink); 
+        }
+
+        input { 
+            padding: 12px; 
+            margin-top: 8px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            border: 2px solid var(--light-pink); 
+            border-radius: 8px; 
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus { 
+            border-color: var(--primary-pink); 
+            box-shadow: 0 0 5px rgba(255, 105, 180, 0.5);
+            outline: none; 
+        }
+
+        /* Tombol Utama */
+        #submitButton { 
+            background-color: var(--primary-pink); 
+            color: white; 
+            padding: 14px 20px; 
+            margin-top: 25px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        #submitButton:hover { 
+            background-color: #FF1493; /* Darker Pink */
+        }
+        #submitButton:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Kotak Pesan Dinamis (Error & Success) */
+        #message { 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            display: none; 
+            font-weight: 500;
+        }
+        .msg-error {
+            background-color: #f8d7da; 
+            color: var(--error-color); 
+            border: 1px solid #f5c6cb;
+        }
+        .msg-success {
+            background-color: #d4edda; 
+            color: var(--success-color); 
+            border: 1px solid #c3e6cb;
+        }
+
+        /* Area Hasil */
+        #result { 
+            margin-top: 25px; 
+            padding: 20px; 
+            border-radius: 12px; 
+            background-color: var(--light-pink); 
+            color: var(--text-color); 
+            border: 1px solid var(--primary-pink); 
+            display: none; 
+            word-wrap: break-word;
+            display: flex; /* Untuk menyejajarkan link dan tombol */
+            align-items: center;
+            justify-content: space-between;
+        }
+        #shortUrlLink { 
+            color: #8B0000; /* Dark Red */
+            font-weight: 600; 
+            text-decoration: none;
+            flex-grow: 1; /* Biarkan link mengambil ruang yang tersisa */
+            margin-right: 10px;
+        }
+
+        /* Tombol Copy */
+        #copyButton {
+            background-color: white;
+            color: var(--primary-pink);
+            border: 2px solid var(--primary-pink);
+            padding: 8px 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #copyButton:hover {
+            background-color: var(--primary-pink);
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Shortlink Creator 🎀</h1>
+    <form id="shortlinkForm">
+        <label for="url">URL Panjang:</label>
+        <input type="url" id="url" required placeholder="https://url-tujuan-anda.com/halaman-panjang">
+
+        <label for="slug">Slug Kustom (Opsional):</label>
+        <input type="text" id="slug" placeholder="misalnya: promo-terbaru">
+        
+        <button type="submit" id="submitButton">Buat Shortlink 💖</button>
+    </form>
+
+    <div id="message"></div>
+    <div id="result">
+        <a id="shortUrlLink" href="#" target="_blank"></a>
+        <button id="copyButton" type="button">Salin</button>
+    </div>
+
+    <script>
+        // *** PASTIKAN URL WORKER INI SUDAH BENAR ***
+        // Ini adalah endpoint API yang akan dipicu oleh Netlify Function Anda
+        const API_ENDPOINT = "https://short.nurts.xyz/api/create"; 
+
+        const form = document.getElementById('shortlinkForm');
+        const urlInput = document.getElementById('url');
+        const slugInput = document.getElementById('slug');
+        const resultDiv = document.getElementById('result');
+        const messageDiv = document.getElementById('message');
+        const shortUrlLink = document.getElementById('shortUrlLink');
+        const submitButton = document.getElementById('submitButton');
+        const copyButton = document.getElementById('copyButton');
+
+        function displayMessage(text, isError = true) {
+            messageDiv.textContent = text;
+            messageDiv.style.display = 'block';
+            messageDiv.className = isError ? 'msg-error' : 'msg-success';
+            
+            if (!isError) {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Fungsi Salin tanpa menggunakan alert()
+        copyButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(shortUrlLink.href)
+                .then(() => {
+                    displayMessage('Link berhasil disalin ke clipboard!', false);
+                })
+                .catch(err => {
+                    console.error('Gagal menyalin:', err);
+                    displayMessage('Gagal menyalin link. Mohon salin manual.', true);
+                });
+        });
+
+        // Handler saat form di submit
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            submitButton.disabled = true;
+            submitButton.textContent = 'Memproses...';
+            messageDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+            
+            const longUrl = urlInput.value.trim();
+            let slug = slugInput.value.trim();
+
+            if (slug === "") {
+                // Buat slug acak jika kosong
+                slug = Math.random().toString(36).substring(2, 8); 
+            }
+            
+            // Bersihkan slug dari karakter yang tidak diinginkan
+            slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '');
+
+            try {
+                // Panggil Netlify Function (Backend)
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug: slug, url: longUrl })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const fullShortUrl = `https://${data.short_url}`;
+                    shortUrlLink.href = fullShortUrl;
+                    shortUrlLink.textContent = fullShortUrl;
+                    resultDiv.style.display = 'flex'; 
+                    // Salin otomatis link baru
+                    navigator.clipboard.writeText(fullShortUrl); 
+                    displayMessage('Shortlink berhasil dibuat & disalin otomatis!', false);
+                } else if (response.status === 409) {
+                    displayMessage(`Gagal (409): ${data.error}. Slug "${slug}" sudah digunakan.`, true);
+                } else {
+                    displayMessage(`Gagal membuat shortlink: ${data.error || 'Terjadi kesalahan server.'}`, true);
+                }
+            } catch (error) {
+                // Menangani 'Failed to fetch' (masalah CORS/jaringan)
+                displayMessage('Terjadi kesalahan jaringan: Tidak dapat terhubung ke server API. Cek DNS atau konfigurasi CORS.', true);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Buat Shortlink 💖';
+            }
+        });
+    </script>
+</body>
+</html>
