@@ -1,7 +1,5 @@
 [build]
-  # Tunjukkan lokasi folder functions
   functions = "functions" 
-  # Perintah untuk menginstal dependensi
   command = "npm install" 
 
 [functions]
@@ -10,16 +8,15 @@
 # --- ATURAN REDIRECT UTAMA ---
 
 [[redirects]]
-  # Tangkap semua traffic yang menuju subdomain short.nurts.xyz
-  # Anda harus mengatur DNS untuk subdomain ini
-  from = "https://short.nurts.xyz/*"
-  # Arahkan semua traffic ke fungsi shortener.js
-  to = "/.netlify/functions/shortener" 
-  status = 200 # Ini hanya untuk internal Netlify, fungsi yang menentukan status akhir (302)
-  force = true 
+  # Redirect /api/create ke fungsi shortener
+  from = "/api/create"
+  to = "/.netlify/functions/shortener"
+  status = 200 # status internal
+  force = true
 
 [[redirects]]
-  # Redirect root path ke index.html untuk menampilkan antarmuka
-  from = "/"
-  to = "/index.html"
+  # Redirect semua path lainnya (yang bukan file statis) ke fungsi. 
+  # Ini menangani /slug-pendek
+  from = "/*"
+  to = "/.netlify/functions/shortener" 
   status = 200
