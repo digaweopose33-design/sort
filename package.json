@@ -1,0 +1,9 @@
+{
+  "name": "netlify-shortlink",
+  "version": "1.0.0",
+  "description": "Dynamic URL shortener using Netlify Functions and Upstash Redis",
+  "main": "functions/shortener.js",
+  "dependencies": {
+    "@upstash/redis": "^1.19.0" 
+  }
+}
