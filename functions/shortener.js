@@ -1,6 +1,9 @@
 const { Redis } = require('@upstash/redis');
 
-// Inisiasi koneksi Upstash menggunakan Environment Variables
+// GANTI DENGAN DOMAIN NETLIFY BAWAAN ANDA
+const NETLIFY_DOMAIN = 'sorturl.netlify.app'; 
+
+// Inisiasi koneksi Upstash menggunakan Environment Variables Netlify
 const redis = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -8,7 +11,7 @@ const redis = new Redis({
 
 // Headers dasar untuk CORS
 const CORS_HEADERS = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': `https://${NETLIFY_DOMAIN}`, // Bolehkan domain Netlify sendiri
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
@@ -23,11 +26,11 @@ exports.handler = async (event) => {
     }
 
     // --- 1. POST: CREATE NEW LINK (API Path: /api/create) ---
+    // Kami mencari path yang berisi /api/create untuk memicu logika pembuatan link
     if (httpMethod === 'POST' && path.includes('/api/create')) {
         try {
             const { slug, url } = JSON.parse(body);
 
-            // Validasi sederhana
             if (!slug || !url || !url.startsWith('http')) {
                 return {
                     statusCode: 400,
@@ -36,22 +39,21 @@ exports.handler = async (event) => {
                 };
             }
 
-            // Cek apakah slug sudah ada di Upstash
             const existingUrl = await redis.get(slug);
             if (existingUrl) {
                 return {
-                    statusCode: 409,
+                    statusCode: 409, // Conflict
                     body: JSON.stringify({ error: 'Slug sudah digunakan.' }),
                     headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
                 };
             }
 
-            // Simpan slug (key) dan URL tujuan (value) di Upstash
             await redis.set(slug, url);
 
             return {
                 statusCode: 200,
-                body: JSON.stringify({ short_url: `short.nurts.xyz/${slug}` }),
+                // Mengembalikan URL shortlink menggunakan domain Netlify
+                body: JSON.stringify({ short_url: `${NETLIFY_DOMAIN}/${slug}` }), 
                 headers: { 
                     'Content-Type': 'application/json',
                     ...CORS_HEADERS
@@ -62,7 +64,7 @@ exports.handler = async (event) => {
             console.error('Upstash Error (POST):', error);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: `Internal server error.` }),
+                body: JSON.stringify({ error: `Internal server error: ${error.message}` }),
                 headers: { 'Content-Type': 'application/json', ...CORS_HEADERS }
             };
         }
@@ -70,16 +72,16 @@ exports.handler = async (event) => {
 
     // --- 2. GET: REDIRECT LINK (Path: /slug) ---
     if (httpMethod === 'GET') {
+        // Ambil slug dari path, pastikan bukan nama file function/root
         const slug = path.split('/').pop(); 
         
-        if (slug && slug !== 'shortener' && slug !== '') {
+        if (slug && slug !== 'shortener' && slug !== 'api' && slug !== '') {
             try {
-                // Ambil URL tujuan dari Upstash
                 const destinationURL = await redis.get(slug);
 
                 if (destinationURL) {
                     return {
-                        statusCode: 302, // Temporary Redirect (penting untuk SEO/Media Sosial)
+                        statusCode: 302, // Temporary Redirect untuk Media Sosial
                         headers: {
                             Location: destinationURL,
                             'Cache-Control': 'no-cache', 
@@ -88,7 +90,6 @@ exports.handler = async (event) => {
                     };
                 }
 
-                // Jika slug tidak ditemukan
                 return { statusCode: 404, body: 'Shortlink tidak ditemukan.' };
 
             } catch (error) {
@@ -98,7 +99,7 @@ exports.handler = async (event) => {
         }
     }
     
-    // Default response jika tidak ada yang cocok (akan dialihkan ke index.html)
+    // Default response, jika request bukan GET redirect atau POST API
     return {
         statusCode: 200,
         body: 'Shortlink Creator Interface',
