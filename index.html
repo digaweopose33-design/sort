@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shortlink Manis 🎀 Netlify</title>
+    <title>Shortlink 🎀</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* ... (CSS yang sama seperti sebelumnya, warna pink) ... */
         :root {
             --primary-pink: #FF69B4;
             --light-pink: #FFC0CB;
@@ -36,14 +35,23 @@
         #shortUrlLink { color: #8B0000; font-weight: 600; text-decoration: none; flex-grow: 1; margin-right: 10px; }
         #copyButton { background-color: white; color: var(--primary-pink); border: 2px solid var(--primary-pink); padding: 8px 15px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
         #copyButton:hover { background-color: var(--primary-pink); color: white; }
-
     </style>
 </head>
 <body>
-    <h1>Shortlink Creator 🎀</h1>
+    <h1>Shortlink OG Creator 🎀</h1>
     <form id="shortlinkForm">
-        <label for="url">URL Panjang:</label>
-        <input type="url" id="url" required placeholder="https://url-tujuan-anda.com/halaman-panjang">
+        
+        <label for="title">OG Title (Judul Share):</label>
+        <input type="text" id="title" required placeholder="Judul yang menarik untuk Facebook/WhatsApp">
+
+        <label for="desc">OG Description (Deskripsi Share):</label>
+        <input type="text" id="desc" placeholder="Deskripsi singkat untuk preview media sosial">
+
+        <label for="imageUrl">OG Image URL (Gambar Preview):</label>
+        <input type="url" id="imageUrl" placeholder="https://contoh.com/gambar-preview.jpg">
+
+        <label for="redirect">URL Tujuan Akhir (Redirect):</label>
+        <input type="url" id="redirect" required placeholder="https://url-tujuan-anda.com/halaman-panjang">
 
         <label for="slug">Slug Kustom (Opsional):</label>
         <input type="text" id="slug" placeholder="misalnya: promo-terbaru">
@@ -58,12 +66,14 @@
     </div>
 
     <script>
-        // *** GANTI DENGAN DOMAIN NETLIFY BAWAAN ANDA ***
-        // Ini adalah endpoint API yang akan dipicu oleh Netlify Function Anda
+        // *** GANTI DENGAN DOMAIN NETLIFY ANDA ***
         const API_ENDPOINT = "https://sorturl.netlify.app/api/create"; 
 
         const form = document.getElementById('shortlinkForm');
-        const urlInput = document.getElementById('url');
+        const titleInput = document.getElementById('title');
+        const descInput = document.getElementById('desc');
+        const imageUrlInput = document.getElementById('imageUrl');
+        const redirectInput = document.getElementById('redirect');
         const slugInput = document.getElementById('slug');
         const resultDiv = document.getElementById('result');
         const messageDiv = document.getElementById('message');
@@ -102,7 +112,10 @@
             messageDiv.style.display = 'none';
             resultDiv.style.display = 'none';
             
-            const longUrl = urlInput.value.trim();
+            const title = titleInput.value.trim();
+            const desc = descInput.value.trim();
+            const imageUrl = imageUrlInput.value.trim();
+            const redirect = redirectInput.value.trim();
             let slug = slugInput.value.trim();
 
             if (slug === "") {
@@ -115,7 +128,13 @@
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ slug: slug, url: longUrl })
+                    body: JSON.stringify({ 
+                        slug: slug, 
+                        title: title, 
+                        desc: desc, 
+                        imageUrl: imageUrl, 
+                        redirect: redirect 
+                    })
                 });
 
                 const data = await response.json();
@@ -142,4 +161,3 @@
     </script>
 </body>
 </html>
-
