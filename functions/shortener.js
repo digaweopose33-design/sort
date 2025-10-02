@@ -1,6 +1,6 @@
 const { Redis } = require('@upstash/redis');
 
-// GANTI DENGAN DOMAIN NETLIFY ANDA
+// GANTI DENGAN DOMAIN NETLIFY ANDA (TANPA https://)
 const NETLIFY_DOMAIN = 'sorturl.netlify.app'; 
 
 const redis = new Redis({
@@ -51,7 +51,7 @@ exports.handler = async (event) => {
 
             return {
                 statusCode: 200,
-                body: JSON.stringify({ short_url: `${NETLIFY_DOMAIN}/${slug}` }), 
+                body: JSON.stringify({ short_url: `https://${NETLIFY_DOMAIN}/${slug}` }), // ✅ full URL
                 headers: { 
                     'Content-Type': 'application/json',
                     ...CORS_HEADERS
