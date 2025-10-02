@@ -26,7 +26,6 @@ exports.handler = async (event) => {
     // --- 1. POST: CREATE NEW LINK (API Path: /api/create) ---
     if (httpMethod === 'POST' && path.includes('/api/create')) {
         try {
-            // Kita sekarang menerima 4 field OG + redirect URL
             const { slug, title, desc, imageUrl, redirect } = JSON.parse(body);
 
             if (!slug || !title || !redirect || !redirect.startsWith('http')) {
@@ -82,9 +81,28 @@ exports.handler = async (event) => {
                     return { statusCode: 404, body: 'Shortlink tidak ditemukan.' };
                 }
 
-                const { title, desc, imageUrl, redirect } = JSON.parse(recordJson);
+                let recordData; 
                 
-                // Logika Deteksi Bot (Untuk menayangkan OG tags)
+                try {
+                    // COBA 1: Coba parsing sebagai JSON (untuk data baru)
+                    recordData = JSON.parse(recordJson);
+                    if (!recordData.redirect) {
+                        throw new Error("Missing redirect key in JSON"); // Gagal jika JSON tidak lengkap
+                    }
+                } catch (e) {
+                    // COBA 2: Jika gagal parsing, perlakukan data sebagai string URL lama (resilience)
+                    console.warn("Falling back to old URL format:", recordJson);
+                    recordData = {
+                        title: "Shortlink Lama (Redirecting)",
+                        desc: "Redirecting to destination URL...",
+                        imageUrl: "",
+                        redirect: recordJson // Anggap recordJson adalah URL redirect
+                    };
+                }
+                
+                const { title, desc, imageUrl, redirect } = recordData;
+                
+                // Logika Deteksi Bot
                 const userAgent = headers["user-agent"] || "";
                 const isBot = /facebookexternalhit|Facebot|Googlebot|bingbot|Slackbot|Discordbot|Twitterbot/i.test(userAgent);
 
@@ -116,13 +134,13 @@ exports.handler = async (event) => {
 </html>`;
 
                 return {
-                    statusCode: 200, // Status 200 OK agar bot membaca HTML
+                    statusCode: 200, 
                     headers: { 'Content-Type': 'text/html; charset=utf-8' },
                     body: html,
                 };
 
             } catch (error) {
-                console.error('Upstash Error (GET):', error);
+                console.error('Final GET Error:', error); 
                 return { statusCode: 500, body: 'Kesalahan internal saat mencari link.' };
             }
         }
