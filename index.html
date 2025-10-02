@@ -140,7 +140,7 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    const fullShortUrl = `https://${data.short_url}`;
+                    const fullShortUrl = data.short_url; // ✅ langsung ambil dari API
                     shortUrlLink.href = fullShortUrl;
                     shortUrlLink.textContent = fullShortUrl;
                     resultDiv.style.display = 'flex'; 
