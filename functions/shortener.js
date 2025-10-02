@@ -87,7 +87,7 @@ exports.handler = async (event) => {
                     // COBA 1: Coba parsing sebagai JSON (untuk data baru)
                     recordData = JSON.parse(recordJson);
                     if (!recordData.redirect) {
-                        throw new Error("Missing redirect key in JSON"); // Gagal jika JSON tidak lengkap
+                        throw new Error("Missing redirect key in JSON"); 
                     }
                 } catch (e) {
                     // COBA 2: Jika gagal parsing, perlakukan data sebagai string URL lama (resilience)
@@ -122,14 +122,20 @@ exports.handler = async (event) => {
     ${isBot ? 
         // Jika bot, sajikan OG tags dan jangan redirect
         '' : 
-        // Jika manusia, redirect setelah 1 detik menggunakan Meta Refresh
-        `<meta http-equiv="refresh" content="3;url=${redirect}">`
+        // Jika manusia, gunakan JavaScript (PRIMARY) dan Meta Refresh (FALLBACK)
+        `<meta http-equiv="refresh" content="1;url=${redirect}">
+         <script>
+            // Redirect yang lebih kuat menggunakan JavaScript
+            setTimeout(function() {
+                window.location.href = "${redirect}";
+            }, 1000); // 1000ms = 1 detik
+         </script>`
     }
 </head>
 <body style="font-family:sans-serif;text-align:center;padding-top:50px;">
     <h1>${title}</h1>
     <p>${isBot ? 'Bot detected. OG tags served. (Will not redirect)' : 'Redirecting you now...'}</p>
-    <p>Destination: <a href="${redirect}">${redirect}</a></p>
+    <p>Destination: ${redirect}</p>
 </body>
 </html>`;
 
@@ -152,4 +158,3 @@ exports.handler = async (event) => {
         body: 'Shortlink Creator Interface',
     };
 };
-
