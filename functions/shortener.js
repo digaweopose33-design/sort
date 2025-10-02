@@ -123,7 +123,7 @@ exports.handler = async (event) => {
         // Jika bot, sajikan OG tags dan jangan redirect
         '' : 
         // Jika manusia, redirect setelah 1 detik menggunakan Meta Refresh
-        `<meta http-equiv="refresh" content="1;url=${redirect}">`
+        `<meta http-equiv="refresh" content="3;url=${redirect}">`
     }
 </head>
 <body style="font-family:sans-serif;text-align:center;padding-top:50px;">
@@ -152,3 +152,4 @@ exports.handler = async (event) => {
         body: 'Shortlink Creator Interface',
     };
 };
+
